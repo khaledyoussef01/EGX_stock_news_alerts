@@ -85,7 +85,7 @@ def send_pushover_alert(title, message, click_url=""):
         "title": title,
         "message": message,
         "priority": 1,       # أولوية مرتفعة لضمان التنبيه الصوتي الفوري
-        "sound": "pushover"  # يمكنك تغييره إلى أصوات أخرى مثل: gamelan, classical, siren, cash
+        "sound": "pushover"  # صوت التنبيه المميز
     }
     if click_url:
         payload["url"] = click_url
