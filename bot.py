@@ -6,10 +6,12 @@ from bs4 import BeautifulSoup
 from google import genai
 from google.genai import types
 
-NTFY_URL = "https://ntfy.sh/EGX_stock_news_alerts"
 MUBASHER_STOCKS_URL = "https://www.mubasher.info/news/eg/pulse/stocks"
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+PUSHOVER_USER_KEY = os.environ.get("PUSHOVER_USER_KEY")
+PUSHOVER_API_TOKEN = os.environ.get("PUSHOVER_API_TOKEN")
+
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 processed_news_ids = set()
@@ -75,18 +77,26 @@ def ai_analyze_news_smart(news_title):
         print(f"خطأ في التحليل: {e}")
         return {"match": False, "category": "", "summary": ""}
 
-def send_ntfy_alert(title, message, click_url=""):
-    headers = {
-        "Title": title.encode('utf-8'),
-        "Priority": "urgent",
-        "Tags": "chart_with_upwards_trend,moneybag",
+def send_pushover_alert(title, message, click_url=""):
+    url = "https://api.pushover.net/1/messages.json"
+    payload = {
+        "token": PUSHOVER_API_TOKEN,
+        "user": PUSHOVER_USER_KEY,
+        "title": title,
+        "message": message,
+        "priority": 1,       # أولوية مرتفعة لضمان التنبيه الصوتي الفوري
+        "sound": "pushover"  # يمكنك تغييره إلى أصوات أخرى مثل: gamelan, classical, siren, cash
     }
     if click_url:
-        headers["Click"] = click_url
+        payload["url"] = click_url
+        payload["url_title"] = "فتح الخبر على مباشر"
+        
     try:
-        requests.post(NTFY_URL, data=message.encode('utf-8'), headers=headers)
+        response = requests.post(url, data=payload)
+        if response.status_code != 200:
+            print(f"خطأ في إرسال Pushover: {response.text}")
     except Exception as e:
-        print(f"خطأ في الإرسال: {e}")
+        print(f"خطأ في الاتصال بـ Pushover: {e}")
 
 def main():
     news_list = fetch_mubasher_stocks_news()
@@ -100,7 +110,7 @@ def main():
         if analysis.get("match") == True:
             alert_title = f"🚨 فرصة EGX: {analysis.get('category')}"
             alert_body = f"{news['title']}\n\n💡 التحليل: {analysis.get('summary')}"
-            send_ntfy_alert(alert_title, alert_body, click_url=news.get('link'))
+            send_pushover_alert(alert_title, alert_body, click_url=news.get('link'))
 
 if __name__ == "__main__":
     main()
