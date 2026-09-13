@@ -114,5 +114,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-send_pushover_alert("اختبار البوت", "هذا إشعار تجريبي للتأكد من عمل Pushover بنجاح!")
-    
