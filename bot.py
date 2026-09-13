@@ -1,6 +1,7 @@
 import time
 import json
 import os
+import random
 import requests
 from bs4 import BeautifulSoup
 from google import genai
@@ -84,8 +85,8 @@ def send_pushover_alert(title, message, click_url=""):
         "user": PUSHOVER_USER_KEY,
         "title": title,
         "message": message,
-        "priority": 1,       # أولوية مرتفعة لضمان التنبيه الصوتي الفوري
-        "sound": "pushover"  # صوت التنبيه المميز
+        "priority": 1,
+        "sound": "pushover"
     }
     if click_url:
         payload["url"] = click_url
@@ -100,6 +101,7 @@ def send_pushover_alert(title, message, click_url=""):
 
 def main():
     news_list = fetch_mubasher_stocks_news()
+    
     for news in news_list:
         news_id = news['id']
         if news_id in processed_news_ids:
@@ -111,6 +113,11 @@ def main():
             alert_title = f"🚨 فرصة EGX: {analysis.get('category')}"
             alert_body = f"{news['title']}\n\n💡 التحليل: {analysis.get('summary')}"
             send_pushover_alert(alert_title, alert_body, click_url=news.get('link'))
+            
+        # إضافة وقت إيقاف عشوائي لمدة تقارب دقيقة (بين 45 إلى 75 ثانية) بين معالجة الأخبار لتجنب الحظر
+        sleep_duration = random.uniform(45, 75)
+        print(f"انتظار مؤقت لمدة {sleep_duration:.2f} ثانية...")
+        time.sleep(sleep_duration)
 
 if __name__ == "__main__":
     main()
